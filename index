@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Shoot Checklist</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Define custom colors for Tailwind CSS -->
+    <!-- IMPORTANT: This script MUST be placed AFTER the Tailwind CSS CDN script -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accent: '#F3AD00',        /* Bold golden yellow (primary) */
+                        darkBase: '#1C1C1E',      /* Deep charcoal (serious, modern) */
+                        secondary: '#005B96',     /* Strong navy blue (trustworthy) */
+                        neutralLight: '#F5F5F5',  /* Light gray (clean background) */
+                        support: '#7A7A7A',       /* Mid-gray (text/secondary UI) */
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for progress bar car emoji */
+        #car-emoji {
+            transition: left 0.5s ease-in-out;
+            position: absolute;
+            top: 50%; /* Vertically center the car emoji */
+            transform: translateY(-50%); /* Adjust for vertical centering */
+            font-size: 2rem; /* Adjust emoji size */
+            z-index: 10;
+        }
+
+        /* Basic styling for clickable tasks */
+        .task-item {
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .task-item:hover {
+            background-color: #e2e8f0; /* Tailwind's gray-200, a light hover for task items */
+        }
+
+        /* Style for completed tasks in the outstanding list (if needed, though they move) */
+        .completed-task {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        /* Hide content sections by default */
+        .tab-content {
+            display: none;
+        }
+
+        /* Ensure smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Keyframes for splash screen animation */
+        @keyframes bounce-once {
+            0%, 100% {
+                transform: translateY(-50%); /* Start and end at center */
+            }
+            50% {
+                transform: translateY(-70%); /* Bounce up */
+            }
+        }
+        @keyframes fade-in-congratulations {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-bounce-once {
+            animation: bounce-once 1s ease-out forwards;
+        }
+        .animate-fade-in-congratulations {
+            animation: fade-in-congratulations 1s ease-out 0.5s forwards; /* Delay the text fade-in */
+        }
+    </style>
+</head>
+<body class="bg-white min-h-screen flex items-center justify-center p-4 font-sans text-support">
+    <div class="bg-neutralLight rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-4xl border border-support transform transition-all duration-300 hover:scale-105">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-center text-darkBase mb-6 drop-shadow-md">
+            🎥 Video Shoot Checklist
+        </h1>
+
+        <!-- Progress Bar -->
+        <div class="w-full bg-support rounded-full h-8 relative overflow-hidden mb-8 shadow-inner">
+            <div id="progress-bar-fill" class="bg-accent h-full rounded-full transition-all duration-500 ease-in-out" style="width: 0%;"></div>
+            <span id="car-emoji" class="absolute top-1/2 -translate-y-50 left-0 pl-1">⚡</span>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-support mb-4">
+            <button id="outstanding-tab" class="flex-1 py-3 px-2 text-center text-lg md:text-xl font-semibold rounded-t-lg transition-colors duration-300 bg-accent text-darkBase shadow-md hover:bg-opacity-90">
+                Outstanding Tasks
+            </button>
+            <button id="completed-tab" class="flex-1 py-3 px-2 text-center text-lg md:text-xl font-semibold rounded-t-lg transition-colors duration-300 text-secondary hover:bg-neutralLight">
+                Completed Tasks
+            </button>
+        </div>
+
+        <!-- Outstanding Tasks Section -->
+        <div id="outstanding-tasks-content" class="tab-content block p-4 bg-neutralLight rounded-lg border border-secondary shadow-inner">
+            <h2 class="text-2xl font-bold text-darkBase mb-4">To Do</h2>
+            <div id="outstanding-tasks-list" class="space-y-3">
+                <!-- Tasks will be dynamically loaded here -->
+            </div>
+            <p id="no-outstanding-tasks" class="text-support text-center py-4 hidden">All tasks completed! 🎉</p>
+        </div>
+
+        <!-- Completed Tasks Section -->
+        <div id="completed-tasks-content" class="tab-content p-4 bg-neutralLight rounded-lg border border-accent shadow-inner">
+            <h2 class="text-2xl font-bold text-darkBase mb-4">Completed</h2>
+            <div id="completed-tasks-list" class="space-y-3">
+                <!-- Completed tasks will be dynamically loaded here -->
+            </div>
+            <p id="no-completed-tasks" class="text-support text-center py-4 hidden">No tasks completed yet.</p>
+        </div>
+    </div>
+
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 bg-darkBase bg-opacity-75 flex flex-col items-center justify-center z-50 hidden opacity-0 transition-opacity duration-500">
+        <div class="text-7xl md:text-8xl mb-4 animate-bounce-once">🍾</div>
+        <div class="text-neutralLight text-4xl md:text-5xl font-bold animate-fade-in-congratulations">Congratulations!</div>
+    </div>
+
+    <script>
+        // Initial array of tasks based on your checklist
+        const tasks = [
+            { id: 'shot1', text: 'Shot 1: Street Walking filmed with multiple takes and lens choices', completed: false },
+            { id: 'shot2', text: 'Shot 2: Fridge Scene filmed with multiple takes and lens choices', completed: false },
+            { id: 'shot3a', text: 'Shot 3A: Food Network Montage Prep filmed with multiple takes and lens choices', completed: false },
+            { id: 'shot3b', text: 'Shot 3B: Home Kitchen Talking Head filmed with multiple takes and lens choices', completed: false },
+            { id: 'shot4', text: 'Shot 4: Meal Prep Montage filmed with multiple takes and lens choices', completed: false },
+            { id: 'shot5a', text: 'Shot 5A: Family Eating B-Roll filmed with multiple takes and lens choices', completed: false },
+            { id: 'shot5b', text: 'Shot 5B: Final Call to Action filmed with multiple takes and lens choices', completed: false },
+            { id: 'insta360', text: 'Insta360 timelapse captured successfully for full meal prep transformation', completed: false },
+            { id: 'liveaudio', text: 'Live audio recorded cleanly with Rode mics', completed: false },
+            { id: 'roomtone', text: 'Room tone captured at each location', completed: false },
+            { id: 'broll', text: 'B-roll footage with variety of lenses for editing flexibility', completed: false }
+        ];
+
+        // Get DOM elements
+        const outstandingTab = document.getElementById('outstanding-tab');
+        const completedTab = document.getElementById('completed-tab');
+        const outstandingContent = document.getElementById('outstanding-tasks-content');
+        const completedContent = document.getElementById('completed-tasks-content');
+        const outstandingList = document.getElementById('outstanding-tasks-list');
+        const completedList = document.getElementById('completed-tasks-list');
+        const noOutstandingTasks = document.getElementById('no-outstanding-tasks');
+        const noCompletedTasks = document.getElementById('no-completed-tasks');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const carEmoji = document.getElementById('car-emoji');
+        const splashScreen = document.getElementById('splash-screen'); // Get the splash screen element
+
+        // Function to render tasks
+        function renderTasks() {
+            outstandingList.innerHTML = ''; // Clear current lists
+            completedList.innerHTML = '';
+
+            const outstanding = tasks.filter(task => !task.completed);
+            const completed = tasks.filter(task => task.completed);
+
+            if (outstanding.length === 0) {
+                noOutstandingTasks.classList.remove('hidden');
+            } else {
+                noOutstandingTasks.classList.add('hidden');
+                outstanding.forEach(task => {
+                    const taskDiv = createTaskElement(task, false); // Render as outstanding
+                    outstandingList.appendChild(taskDiv);
+                });
+            }
+
+            if (completed.length === 0) {
+                noCompletedTasks.classList.remove('hidden');
+            } else {
+                noCompletedTasks.classList.add('hidden');
+                completed.forEach(task => {
+                    const taskDiv = createTaskElement(task, true); // Render as completed
+                    completedList.appendChild(taskDiv);
+                });
+            }
+
+            updateProgressBar();
+        }
+
+        // Function to create a single task DOM element
+        function createTaskElement(task, isCompletedList) {
+            const taskDiv = document.createElement('div');
+            taskDiv.id = `task-${task.id}`;
+            // Use custom Tailwind classes for colors
+            taskDiv.className = `task-item p-4 border rounded-lg flex items-center justify-between text-base md:text-lg shadow-sm transition-all duration-200 ${isCompletedList ? 'bg-neutralLight border-accent line-through text-support' : 'bg-neutralLight border-neutralLight hover:bg-support/10'}`;
+            taskDiv.innerHTML = `
+                <span class="flex-grow">${task.text}</span>
+                <span class="ml-4 text-xl">
+                    ${isCompletedList ? '✅' : '⏳'}
+                </span>
+            `;
+
+            taskDiv.addEventListener('click', () => toggleTaskCompletion(task.id));
+            return taskDiv;
+        }
+
+        // Function to toggle task completion status
+        function toggleTaskCompletion(id) {
+            const taskIndex = tasks.findIndex(task => task.id === id);
+            if (taskIndex > -1) {
+                tasks[taskIndex].completed = !tasks[taskIndex].completed; // Toggle completion
+                renderTasks(); // Re-render both lists to reflect changes
+            }
+        }
+
+        // Function to update the progress bar and car emoji position
+        function updateProgressBar() {
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(task => task.completed).length;
+            const progressPercentage = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
+
+            progressBarFill.style.width = `${progressPercentage}%`;
+
+            // Get the actual width of the car emoji dynamically for accurate positioning
+            const carWidth = carEmoji.offsetWidth;
+            // Get the total width of the progress bar container (the grey track)
+            const progressBarWidth = progressBarFill.parentElement.offsetWidth;
+            // Define a small padding to keep the car visually clear of the rounded edges
+            const edgePadding = 8;
+
+            // Calculate the desired center point of the car emoji relative to the progress percentage
+            let desiredCarLeft = (progressPercentage / 100) * progressBarWidth - (carWidth / 2);
+
+            // Clamp the car's position to ensure it stays within the visible area
+            const minLeft = edgePadding;
+            const maxLeft = progressBarWidth - carWidth - edgePadding;
+
+            // Apply clamping
+            if (desiredCarLeft < minLeft) {
+                desiredCarLeft = minLeft;
+            }
+            if (desiredCarLeft > maxLeft) {
+                desiredCarLeft = maxLeft;
+            }
+
+            carEmoji.style.left = `${desiredCarLeft}px`;
+
+            // Show splash screen if all tasks are completed
+            if (progressPercentage === 100 && totalTasks > 0) {
+                splashScreen.classList.remove('hidden');
+                setTimeout(() => {
+                    splashScreen.classList.add('opacity-100');
+                }, 10);
+            } else {
+                splashScreen.classList.remove('opacity-100');
+                setTimeout(() => {
+                    splashScreen.classList.add('hidden');
+                }, 500);
+            }
+        }
+
+        // Function to switch tabs
+        function switchTab(activeTab) {
+            if (activeTab === 'outstanding') {
+                outstandingTab.classList.add('bg-accent', 'text-darkBase', 'shadow-md', 'hover:bg-opacity-90');
+                outstandingTab.classList.remove('bg-neutralLight', 'text-secondary', 'hover:bg-neutralLight');
+                completedTab.classList.remove('bg-accent', 'text-darkBase', 'shadow-md', 'hover:bg-opacity-90');
+                completedTab.classList.add('bg-neutralLight', 'text-secondary', 'hover:bg-neutralLight');
+
+                outstandingContent.style.display = 'block';
+                completedContent.style.display = 'none';
+            } else { // activeTab === 'completed'
+                completedTab.classList.add('bg-accent', 'text-darkBase', 'shadow-md', 'hover:bg-opacity-90');
+                completedTab.classList.remove('bg-neutralLight', 'text-secondary', 'hover:bg-neutralLight');
+                outstandingTab.classList.remove('bg-accent', 'text-darkBase', 'shadow-md', 'hover:bg-opacity-90');
+                outstandingTab.classList.add('bg-neutralLight', 'text-secondary', 'hover:bg-neutralLight');
+
+                outstandingContent.style.display = 'none';
+                completedContent.style.display = 'block';
+            }
+        }
+
+        // Event listeners for tab clicks
+        outstandingTab.addEventListener('click', () => switchTab('outstanding'));
+        completedTab.addEventListener('click', () => switchTab('completed'));
+
+        // Initial render on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            switchTab('outstanding'); // Start on the outstanding tasks tab
+        });
+    </script>
+</body>
+</html>
